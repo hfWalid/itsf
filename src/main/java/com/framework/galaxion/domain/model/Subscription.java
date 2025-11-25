@@ -1,2 +1,4 @@
-package com.framework.galaxion.domain.model;public class Subscription {
+package com.framework.galaxion.domain.model;
+
+public class Subscription {
 }

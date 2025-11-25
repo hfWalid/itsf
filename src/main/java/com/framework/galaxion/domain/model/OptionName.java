@@ -1,2 +1,4 @@
-package com.framework.galaxion.domain.model;public enum OptionName {
+package com.framework.galaxion.domain.model;
+
+public enum OptionName {
 }
