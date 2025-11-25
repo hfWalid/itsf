@@ -1,0 +1,7 @@
+/Users/neferpitou_/Workspace/framework-walidhefhaf/src/main/java/com/framework/galaxion/GalaxionApplication.java
+/Users/neferpitou_/Workspace/framework-walidhefhaf/src/main/java/com/framework/galaxion/domain/exception/InvalidOptionForSubscriptionTypeException.java
+/Users/neferpitou_/Workspace/framework-walidhefhaf/src/main/java/com/framework/galaxion/domain/exception/SubscriptionNotFoundException.java
+/Users/neferpitou_/Workspace/framework-walidhefhaf/src/main/java/com/framework/galaxion/domain/model/OptionName.java
+/Users/neferpitou_/Workspace/framework-walidhefhaf/src/main/java/com/framework/galaxion/domain/model/Subscription.java
+/Users/neferpitou_/Workspace/framework-walidhefhaf/src/main/java/com/framework/galaxion/domain/model/SubscriptionOption.java
+/Users/neferpitou_/Workspace/framework-walidhefhaf/src/main/java/com/framework/galaxion/domain/model/SubscriptionType.java
