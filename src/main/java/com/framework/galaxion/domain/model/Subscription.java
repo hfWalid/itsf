@@ -2,6 +2,7 @@ package com.framework.galaxion.domain.model;
 
 import com.framework.galaxion.domain.exception.InvalidOptionForSubscriptionTypeException;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.List;
 
 @Getter
 public class Subscription {
+    @Setter
     private Long id;
     private final SubscriptionType subscriptionType;
     private final LocalDate subscriptionDate;
@@ -27,6 +29,20 @@ public class Subscription {
         this.subscriptionDate = subscriptionDate;
         this.clientId = clientId;
         this.options = new ArrayList<>();
+    }
+
+    public Subscription(
+            Long id,
+            SubscriptionType subscriptionType,
+            LocalDate subscriptionDate,
+            String clientId,
+            List<SubscriptionOption> options
+    ) {
+        this.id = id;
+        this.subscriptionType = subscriptionType;
+        this.subscriptionDate = subscriptionDate;
+        this.clientId = clientId;
+        this.options = new ArrayList<>(options);
     }
 
     public SubscriptionOption addOption(OptionName optionName) {
@@ -57,4 +73,3 @@ public class Subscription {
         }
     }
 }
-
