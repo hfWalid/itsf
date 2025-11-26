@@ -1,2 +1,5 @@
 /Users/neferpitou_/Workspace/framework-walidhefhaf/src/test/java/com/framework/galaxion/GalaxionApplicationTests.java
+/Users/neferpitou_/Workspace/framework-walidhefhaf/src/test/java/com/framework/galaxion/application/service/SubscriptionServiceTest.java
 /Users/neferpitou_/Workspace/framework-walidhefhaf/src/test/java/com/framework/galaxion/domain/model/SubscriptionTest.java
+/Users/neferpitou_/Workspace/framework-walidhefhaf/src/test/java/com/framework/galaxion/infra/adapter/in/rest/controller/SubscriptionControllerTest.java
+/Users/neferpitou_/Workspace/framework-walidhefhaf/src/test/java/com/framework/galaxion/infra/adapter/out/persistence/SubscriptionRepositoryAdapterTest.java

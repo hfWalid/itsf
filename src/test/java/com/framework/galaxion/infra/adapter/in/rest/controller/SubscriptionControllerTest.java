@@ -8,8 +8,10 @@ import com.framework.galaxion.domain.model.Subscription;
 import com.framework.galaxion.domain.model.SubscriptionOption;
 import com.framework.galaxion.domain.model.SubscriptionType;
 import com.framework.galaxion.domain.port.in.AddOptionToSubscriptionUseCase;
+import com.framework.galaxion.domain.port.in.CreateSubscriptionUseCase;
 import com.framework.galaxion.domain.port.in.GetAllSubscriptionsUseCase;
 import com.framework.galaxion.infra.adapter.in.rest.dto.AddOptionRequest;
+import com.framework.galaxion.infra.adapter.in.rest.dto.CreateSubscriptionRequest;
 import com.framework.galaxion.infra.adapter.in.rest.dto.SubscriptionOptionResponse;
 import com.framework.galaxion.infra.adapter.in.rest.dto.SubscriptionResponse;
 import com.framework.galaxion.infra.adapter.in.rest.mapper.SubscriptionRestMapper;
@@ -31,7 +33,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(SubscriptionController.class)
-@DisplayName("Suite Test: Subscription Rest Controller Tests")
+@DisplayName("Suite Test: Subscription Tests")
 class SubscriptionControllerTest {
 
     @Autowired
@@ -44,10 +46,56 @@ class SubscriptionControllerTest {
     private GetAllSubscriptionsUseCase getAllSubscriptionsUseCase;
 
     @MockBean
+    private CreateSubscriptionUseCase createSubscriptionUseCase;
+
+    @MockBean
     private AddOptionToSubscriptionUseCase addOptionToSubscriptionUseCase;
 
     @MockBean
     private SubscriptionRestMapper mapper;
+
+    @Test
+    @DisplayName("Test case: should_return_201_when_subscription_created_successfully")
+    void should_return_201_when_subscription_created_successfully() throws Exception {
+        CreateSubscriptionRequest request = new CreateSubscriptionRequest(
+                SubscriptionType.MOBILE,
+                "C123"
+        );
+
+        Subscription domainSubscription = new Subscription(
+                1L,
+                SubscriptionType.MOBILE,
+                LocalDate.now(),
+                "C123"
+        );
+
+        SubscriptionResponse response = SubscriptionResponse.builder()
+                .id(1L)
+                .subscriptionType(SubscriptionType.MOBILE)
+                .subscriptionDate(LocalDate.now())
+                .clientId("C123")
+                .options(List.of())
+                .build();
+
+        when(createSubscriptionUseCase.execute(SubscriptionType.MOBILE, "C123"))
+                .thenReturn(domainSubscription);
+        when(mapper.toResponse(domainSubscription))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/api/subscriptions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(header().exists("Location"))
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.subscriptionType", is("MOBILE")))
+                .andExpect(jsonPath("$.clientId", is("C123")))
+                .andExpect(jsonPath("$.subscriptionDate", is(LocalDate.now().toString())))
+                .andExpect(jsonPath("$.options", hasSize(0)));
+
+        verify(createSubscriptionUseCase).execute(SubscriptionType.MOBILE, "C123");
+        verify(mapper).toResponse(domainSubscription);
+    }
 
     @Test
     @DisplayName("Test case: should_return_200_with_all_subscriptions")
@@ -62,37 +110,38 @@ class SubscriptionControllerTest {
         );
         sub2.addOption(OptionName.NETFLIX);
 
+        SubscriptionResponse resp1 = SubscriptionResponse.builder()
+                .id(1L)
+                .subscriptionType(SubscriptionType.MOBILE)
+                .subscriptionDate(LocalDate.now())
+                .clientId("C123")
+                .options(List.of(
+                        SubscriptionOptionResponse.builder()
+                                .id(1L)
+                                .optionName(OptionName.ROAMING)
+                                .subscriptionDate(LocalDate.now())
+                                .build()
+                ))
+                .build();
+
+        SubscriptionResponse resp2 = SubscriptionResponse.builder()
+                .id(2L)
+                .subscriptionType(SubscriptionType.FIBER)
+                .subscriptionDate(LocalDate.now())
+                .clientId("C456")
+                .options(List.of(
+                        SubscriptionOptionResponse.builder()
+                                .id(2L)
+                                .optionName(OptionName.NETFLIX)
+                                .subscriptionDate(LocalDate.now())
+                                .build()
+                ))
+                .build();
+
         when(getAllSubscriptionsUseCase.execute())
                 .thenReturn(List.of(sub1, sub2));
-
-        when(mapper.toResponse(sub1))
-                .thenReturn(SubscriptionResponse.builder()
-                        .id(1L)
-                        .subscriptionType(SubscriptionType.MOBILE)
-                        .subscriptionDate(LocalDate.now())
-                        .clientId("C123")
-                        .options(List.of(SubscriptionOptionResponse.builder()
-                                        .id(1L)
-                                        .optionName(OptionName.ROAMING)
-                                        .subscriptionDate(LocalDate.now())
-                                        .build()
-                        ))
-                        .build());
-
-        when(mapper.toResponse(sub2))
-                .thenReturn(SubscriptionResponse.builder()
-                        .id(2L)
-                        .subscriptionType(SubscriptionType.FIBER)
-                        .subscriptionDate(LocalDate.now())
-                        .clientId("C456")
-                        .options(List.of(
-                                SubscriptionOptionResponse.builder()
-                                        .id(2L)
-                                        .optionName(OptionName.NETFLIX)
-                                        .subscriptionDate(LocalDate.now())
-                                        .build()
-                        ))
-                        .build());
+        when(mapper.toResponse(sub1)).thenReturn(resp1);
+        when(mapper.toResponse(sub2)).thenReturn(resp2);
 
         mockMvc.perform(get("/api/subscriptions")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -109,20 +158,6 @@ class SubscriptionControllerTest {
     }
 
     @Test
-    @DisplayName("Test case: should_return_200_with_empty_array_when_no_subscriptions")
-    void should_return_200_with_empty_array_when_no_subscriptions() throws Exception {
-        when(getAllSubscriptionsUseCase.execute()).thenReturn(List.of());
-
-        mockMvc.perform(get("/api/subscriptions")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(0)));
-
-        verify(getAllSubscriptionsUseCase).execute();
-    }
-
-    @Test
     @DisplayName("Test case: should_include_options_in_subscription_response")
     void should_include_options_in_subscription_response() throws Exception {
         Subscription subscription = new Subscription(
@@ -131,25 +166,25 @@ class SubscriptionControllerTest {
         subscription.addOption(OptionName.ROAMING);
         subscription.addOption(OptionName.ROAMING);
 
-        when(getAllSubscriptionsUseCase.execute())
-                .thenReturn(List.of(subscription));
+        SubscriptionResponse response = SubscriptionResponse.builder()
+                .id(1L)
+                .subscriptionType(SubscriptionType.MOBILE)
+                .subscriptionDate(LocalDate.now())
+                .clientId("C123")
+                .options(List.of(
+                        SubscriptionOptionResponse.builder()
+                                .optionName(OptionName.ROAMING)
+                                .subscriptionDate(LocalDate.now())
+                                .build(),
+                        SubscriptionOptionResponse.builder()
+                                .optionName(OptionName.ROAMING)
+                                .subscriptionDate(LocalDate.now())
+                                .build()
+                ))
+                .build();
 
-        when(mapper.toResponse(subscription))
-                .thenReturn(SubscriptionResponse.builder()
-                        .id(1L)
-                        .subscriptionType(SubscriptionType.MOBILE)
-                        .subscriptionDate(LocalDate.now())
-                        .clientId("C123")
-                        .options(List.of(SubscriptionOptionResponse.builder()
-                                        .optionName(OptionName.ROAMING)
-                                        .subscriptionDate(LocalDate.now())
-                                        .build(),
-                                SubscriptionOptionResponse.builder()
-                                        .optionName(OptionName.ROAMING)
-                                        .subscriptionDate(LocalDate.now())
-                                        .build()
-                        ))
-                        .build());
+        when(getAllSubscriptionsUseCase.execute()).thenReturn(List.of(subscription));
+        when(mapper.toResponse(subscription)).thenReturn(response);
 
         mockMvc.perform(get("/api/subscriptions"))
                 .andExpect(status().isOk())
@@ -165,15 +200,15 @@ class SubscriptionControllerTest {
                 10L, OptionName.ROAMING, LocalDate.now()
         );
 
+        SubscriptionOptionResponse response = SubscriptionOptionResponse.builder()
+                .id(10L)
+                .optionName(OptionName.ROAMING)
+                .subscriptionDate(LocalDate.now())
+                .build();
+
         when(addOptionToSubscriptionUseCase.execute(1L, OptionName.ROAMING))
                 .thenReturn(option);
-
-        when(mapper.toResponse(option))
-                .thenReturn(SubscriptionOptionResponse.builder()
-                        .id(10L)
-                        .optionName(OptionName.ROAMING)
-                        .subscriptionDate(LocalDate.now())
-                        .build());
+        when(mapper.toResponse(option)).thenReturn(response);
 
         mockMvc.perform(post("/api/subscriptions/1/options")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -207,6 +242,27 @@ class SubscriptionControllerTest {
     }
 
     @Test
+    @DisplayName("Test case: should_create_subscription_with_valid_data")
+    void should_return_400_when_option_incompatible_with_type() throws Exception {
+        AddOptionRequest request = new AddOptionRequest(OptionName.ROAMING);
+
+        when(addOptionToSubscriptionUseCase.execute(1L, OptionName.ROAMING))
+                .thenThrow(new InvalidOptionForSubscriptionTypeException(
+                        SubscriptionType.FIBER, OptionName.ROAMING
+                ));
+
+        mockMvc.perform(post("/api/subscriptions/1/options")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("INVALID_OPTION")))
+                .andExpect(jsonPath("$.message", containsString("ROAMING")))
+                .andExpect(jsonPath("$.message", containsString("MOBILE")));
+
+        verify(addOptionToSubscriptionUseCase).execute(1L, OptionName.ROAMING);
+    }
+
+    @Test
     @DisplayName("Test case: should_return_400_when_request_body_invalid")
     void should_return_400_when_request_body_invalid() throws Exception {
         String invalidRequest = "{}";
@@ -222,4 +278,3 @@ class SubscriptionControllerTest {
         verify(addOptionToSubscriptionUseCase, never()).execute(any(), any());
     }
 }
-

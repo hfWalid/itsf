@@ -1,2 +1,5 @@
-com/framework/galaxion/domain/model/SubscriptionTest.class
+com/framework/galaxion/infra/adapter/in/rest/controller/SubscriptionControllerTest.class
 com/framework/galaxion/GalaxionApplicationTests.class
+com/framework/galaxion/infra/adapter/out/persistence/SubscriptionRepositoryAdapterTest.class
+com/framework/galaxion/application/service/SubscriptionServiceTest.class
+com/framework/galaxion/domain/model/SubscriptionTest.class
